@@ -15,50 +15,50 @@ jobs:
         include:
         - docker_tag: xenial
           docker_tags: |
-            introlab3it/rtabmap:xenial
-            introlab3it/rtabmap:16.04
+            i3dr/rtabmap:xenial
+            i3dr/rtabmap:16.04
           docker_platforms: |
             linux/amd64
           docker_path: 'xenial'
         - docker_tag: bionic
           docker_tags: |
-            introlab3it/rtabmap:bionic
-            introlab3it/rtabmap:18.04
+            i3dr/rtabmap:bionic
+            i3dr/rtabmap:18.04
           docker_platforms: |
             linux/amd64
             linux/arm64
           docker_path: 'bionic'
         - docker_tag: focal
           docker_tags: |
-            introlab3it/rtabmap:focal
-            introlab3it/rtabmap:20.04
-            introlab3it/rtabmap:latest
+            i3dr/rtabmap:focal
+            i3dr/rtabmap:20.04
+            i3dr/rtabmap:latest
           docker_platforms: |
             linux/amd64
             linux/arm64
           docker_path: 'focal'
         - docker_tag: android23
           docker_tags: |
-            introlab3it/rtabmap:android23
-            introlab3it/rtabmap:tango
+            i3dr/rtabmap:android23
+            i3dr/rtabmap:tango
           docker_platforms: |
             linux/amd64
           docker_path: 'bionic/android/rtabmap_api23'
         - docker_tag: android24
           docker_tags: |
-            introlab3it/rtabmap:android24
+            i3dr/rtabmap:android24
           docker_platforms: |
             linux/amd64
           docker_path: 'bionic/android/rtabmap_api24'
         - docker_tag: android26
           docker_tags: |
-            introlab3it/rtabmap:android26
+            i3dr/rtabmap:android26
           docker_platforms: |
             linux/amd64
           docker_path: 'bionic/android/rtabmap_api26'
         - docker_tag: android30
           docker_tags: |
-            introlab3it/rtabmap:android30
+            i3dr/rtabmap:android30
           docker_platforms: |
             linux/amd64
           docker_path: 'bionic/android/rtabmap_api30'
@@ -91,6 +91,6 @@ jobs:
           build-args: |
             CACHE_DATE=${{ github.head_ref }}.${{ github.sha }}
           tags: ${{ matrix.docker_tags }}
-          cache-from: type=registry,ref=introlab3it/rtabmap:${{ matrix.docker_tag }}
+          cache-from: type=registry,ref=i3dr/rtabmap:${{ matrix.docker_tag }}
           cache-to: type=inline
 
