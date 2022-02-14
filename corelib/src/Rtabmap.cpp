@@ -1038,23 +1038,32 @@ void Rtabmap::resetMemory()
 class NearestPathKey
 {
 public:
-	NearestPathKey(float l, int i) :
+	NearestPathKey(float l, int i, float d) :
 		likelihood(l),
-		id(i){}
+		id(i),
+		distance(d){}
 	bool operator<(const NearestPathKey & k) const
 	{
 		if(likelihood < k.likelihood)
 		{
 			return true;
 		}
-		else if(likelihood == k.likelihood && id < k.id)
+		else if(likelihood == k.likelihood)
 		{
-			return true;
+			if(distance > k.distance)
+			{
+				return true;
+			}
+			else if(distance == k.distance && id < k.id)
+			{
+				return true;
+			}
 		}
 		return false;
 	}
 	float likelihood;
 	int id;
+	float distance;
 };
 
 //============================================================
@@ -1952,6 +1961,11 @@ bool Rtabmap::process(
 	else if(!signature->isBadSignature() && (smallDisplacement || tooFastMovement))
 	{
 		_highestHypothesis = lastHighestHypothesis;
+		UDEBUG("smallDisplacement=%d tooFastMovement=%d", smallDisplacement?1:0, tooFastMovement?1:0);
+	}
+	else
+	{
+		UDEBUG("Ignoring likelihood and loop closure hypotheses as current signature doesn't have enough visual features.");
 	}
 
 	//============================================================
@@ -2349,23 +2363,6 @@ bool Rtabmap::process(
 	}
 
 	//============================================================
-	// Landmark
-	//============================================================
-	std::map<int, std::set<int> > landmarksDetected; // <Landmark ID, list of nodes that saw this landmark>
-	if(!signature->getLandmarks().empty())
-	{
-		for(std::map<int, Link>::const_iterator iter=signature->getLandmarks().begin(); iter!=signature->getLandmarks().end(); ++iter)
-		{
-			if(uContains(_memory->getLandmarksIndex(), iter->first) &&
-					_memory->getLandmarksIndex().find(iter->first)->second.size()>1)
-			{
-				UINFO("Landmark %d observed again! Seen the first time by node %d.", -iter->first, *_memory->getLandmarksIndex().find(iter->first)->second.begin());
-				landmarksDetected.insert(std::make_pair(iter->first, _memory->getLandmarksIndex().find(iter->first)->second));
-			}
-		}
-	}
-
-	//============================================================
 	// Proximity detections
 	//============================================================
 	std::list<std::pair<int, int> > loopClosureLinksAdded;
@@ -2446,21 +2443,25 @@ bool Rtabmap::process(
 				UDEBUG("got %d paths", (int)nearestPathsNotSorted.size());
 				// sort nearest paths by highest likelihood (if two have same likelihood, sort by id)
 				std::map<NearestPathKey, std::map<int, Transform> > nearestPaths;
+				Transform currentPoseInv = _optimizedPoses.at(signature->id());
 				for(std::map<int, std::map<int, Transform> >::const_iterator iter=nearestPathsNotSorted.begin();iter!=nearestPathsNotSorted.end(); ++iter)
 				{
 					const std::map<int, Transform> & path = iter->second;
 					float highestLikelihood = 0.0f;
 					int highestLikelihoodId = iter->first;
+					float smallestDistanceSqr = -1;
 					for(std::map<int, Transform>::const_iterator jter=path.begin(); jter!=path.end(); ++jter)
 					{
 						float v = uValue(likelihood, jter->first, 0.0f);
-						if(v > highestLikelihood)
+						float distance = (currentPoseInv * jter->second).getNormSquared();
+						if(v > highestLikelihood || (v == highestLikelihood && (smallestDistanceSqr < 0 || distance < smallestDistanceSqr)))
 						{
 							highestLikelihood = v;
 							highestLikelihoodId = jter->first;
+							smallestDistanceSqr = distance;
 						}
 					}
-					nearestPaths.insert(std::make_pair(NearestPathKey(highestLikelihood, highestLikelihoodId), path));
+					nearestPaths.insert(std::make_pair(NearestPathKey(highestLikelihood, highestLikelihoodId, smallestDistanceSqr), path));
 				}
 				UDEBUG("nearestPaths=%d proximityMaxPaths=%d", (int)nearestPaths.size(), _proximityMaxPaths);
 
@@ -2538,17 +2539,20 @@ bool Rtabmap::process(
 									if(_loopClosureHypothesis.first>0 &&
 										nearestIds.find(_loopClosureHypothesis.first)!=nearestIds.end())
 									{
+										// Avoid transform computation on the global loop closure if a visual proximity
+										// one has been detected close (inside proximity radius) to that hypothesis.
 										UDEBUG("Proximity detection on %d is close to loop closure %d, ignoring loop closure transform estimation...",
 												nearestId, _loopClosureHypothesis.first);
+
 										if(nearestId == _loopClosureHypothesis.first)
 										{
 											type = Link::kGlobalClosure;
+											loopIdSuppressedByProximity = nearestId;
 										}
-										// In localization mode, avoid transform
-										// computation on the global loop closure if a visual proximity
-										// one has been detected close (inside proximity radius) to that hypothesis.
-										loopIdSuppressedByProximity = _loopClosureHypothesis.first;
-										_loopClosureHypothesis.first = 0;
+										else if(loopIdSuppressedByProximity == 0)
+										{
+											loopIdSuppressedByProximity = nearestId;
+										}
 									}
 
 									_memory->addLink(Link(signature->id(), nearestId, type, transform, information));
@@ -2764,56 +2768,63 @@ bool Rtabmap::process(
 	//=============================================================
 	if(_loopClosureHypothesis.first>0)
 	{
-		//Compute transform if metric data are present
-		Transform transform;
-		RegistrationInfo info;
-		info.covariance = cv::Mat::eye(6,6,CV_64FC1);
-		if(_rgbdSlamMode)
+		if(loopIdSuppressedByProximity==0)
 		{
-			transform = _memory->computeTransform(
-					_loopClosureHypothesis.first,
-					signature->id(),
-					_loopClosureIdentityGuess?Transform::getIdentity():Transform(),
-					&info);
+			//Compute transform if metric data are present
+			Transform transform;
+			RegistrationInfo info;
+			info.covariance = cv::Mat::eye(6,6,CV_64FC1);
+			if(_rgbdSlamMode)
+			{
+				transform = _memory->computeTransform(
+						_loopClosureHypothesis.first,
+						signature->id(),
+						_loopClosureIdentityGuess?Transform::getIdentity():Transform(),
+						&info);
 
-			loopClosureVisualInliersMeanDist = info.inliersMeanDistance;
-			loopClosureVisualInliersDistribution = info.inliersDistribution;
+				loopClosureVisualInliersMeanDist = info.inliersMeanDistance;
+				loopClosureVisualInliersDistribution = info.inliersDistribution;
 
-			loopClosureVisualInliers = info.inliers;
-			loopClosureVisualInliersRatio = info.inliersRatio;
-			loopClosureVisualMatches = info.matches;
-			rejectedGlobalLoopClosure = transform.isNull();
-			if(rejectedGlobalLoopClosure)
-			{
-				UWARN("Rejected loop closure %d -> %d: %s",
-						_loopClosureHypothesis.first, signature->id(), info.rejectedMsg.c_str());
+				loopClosureVisualInliers = info.inliers;
+				loopClosureVisualInliersRatio = info.inliersRatio;
+				loopClosureVisualMatches = info.matches;
+				rejectedGlobalLoopClosure = transform.isNull();
+				if(rejectedGlobalLoopClosure)
+				{
+					UWARN("Rejected loop closure %d -> %d: %s",
+							_loopClosureHypothesis.first, signature->id(), info.rejectedMsg.c_str());
+				}
+				else if(_maxLoopClosureDistance>0.0f && transform.getNorm() > _maxLoopClosureDistance)
+				{
+					rejectedGlobalLoopClosure = true;
+					UWARN("Rejected localization %d -> %d because distance to map (%fm) is over %s=%fm.",
+							_loopClosureHypothesis.first, signature->id(), transform.getNorm(), Parameters::kRGBDMaxLoopClosureDistance().c_str(), _maxLoopClosureDistance);
+				}
+				else
+				{
+					transform = transform.inverse();
+				}
 			}
-			else if(_maxLoopClosureDistance>0.0f && transform.getNorm() > _maxLoopClosureDistance)
-			{
-				rejectedGlobalLoopClosure = true;
-				UWARN("Rejected localization %d -> %d because distance to map (%fm) is over %s=%fm.",
-						_loopClosureHypothesis.first, signature->id(), transform.getNorm(), Parameters::kRGBDMaxLoopClosureDistance().c_str(), _maxLoopClosureDistance);
-			}
-			else
-			{
-				transform = transform.inverse();
-			}
-		}
-		if(!rejectedGlobalLoopClosure)
-		{
-			// Make the new one the parent of the old one
-			UASSERT(info.covariance.at<double>(0,0) > 0.0 && info.covariance.at<double>(5,5) > 0.0);
-			cv::Mat information = getInformation(info.covariance);
-			loopClosureLinearVariance = 1.0/information.at<double>(0,0);
-			loopClosureAngularVariance = 1.0/information.at<double>(5,5);
-			rejectedGlobalLoopClosure = !_memory->addLink(Link(signature->id(), _loopClosureHypothesis.first, Link::kGlobalClosure, transform, information));
 			if(!rejectedGlobalLoopClosure)
 			{
-				loopClosureLinksAdded.push_back(std::make_pair(signature->id(), _loopClosureHypothesis.first));
+				// Make the new one the parent of the old one
+				UASSERT(info.covariance.at<double>(0,0) > 0.0 && info.covariance.at<double>(5,5) > 0.0);
+				cv::Mat information = getInformation(info.covariance);
+				loopClosureLinearVariance = 1.0/information.at<double>(0,0);
+				loopClosureAngularVariance = 1.0/information.at<double>(5,5);
+				rejectedGlobalLoopClosure = !_memory->addLink(Link(signature->id(), _loopClosureHypothesis.first, Link::kGlobalClosure, transform, information));
+				if(!rejectedGlobalLoopClosure)
+				{
+					loopClosureLinksAdded.push_back(std::make_pair(signature->id(), _loopClosureHypothesis.first));
+				}
+			}
+
+			if(rejectedGlobalLoopClosure)
+			{
+				_loopClosureHypothesis.first = 0;
 			}
 		}
-
-		if(rejectedGlobalLoopClosure)
+		else if(loopIdSuppressedByProximity != _loopClosureHypothesis.first)
 		{
 			_loopClosureHypothesis.first = 0;
 		}
@@ -2821,6 +2832,41 @@ bool Rtabmap::process(
 
 	timeAddLoopClosureLink = timer.ticks();
 	ULOGGER_INFO("timeAddLoopClosureLink=%fs", timeAddLoopClosureLink);
+
+	//============================================================
+	// Landmark
+	//============================================================
+	std::map<int, std::set<int> > landmarksDetected; // <Landmark ID, list of nodes that saw this landmark>
+	if(!signature->getLandmarks().empty())
+	{
+		bool hasGlobalLoopClosuresInOdomCache = !graph::filterLinks(_odomCacheConstraints, Link::kGlobalClosure, true).empty() || _loopClosureHypothesis.first != 0;
+		UDEBUG("hasGlobalLoopClosuresInOdomCache=%d", hasGlobalLoopClosuresInOdomCache?1:0);
+		for(std::map<int, Link>::const_iterator iter=signature->getLandmarks().begin(); iter!=signature->getLandmarks().end(); ++iter)
+		{
+			if(uContains(_memory->getLandmarksIndex(), iter->first) &&
+					_memory->getLandmarksIndex().find(iter->first)->second.size()>1)
+			{
+				if(!_memory->isIncremental() &&          // In localization mode
+					!hasGlobalLoopClosuresInOdomCache && // If there are global loop closures in odom cache, we can keep far landmarks
+					_localRadius>0.0 &&
+					iter->second.transform().getNormSquared() > _localRadius*_localRadius)
+				{
+					// Ignore landmark detections over local radius
+					UWARN("Ignoring landmark %d for localization as it is too far (%fm > %s=%f) "
+							"and odom cache doesn't contain global loop closure(s).",
+							iter->first,
+							iter->second.transform().getNorm(),
+							Parameters::kRGBDLocalRadius().c_str(),
+							_localRadius);
+				}
+				else
+				{
+					UINFO("Landmark %d observed again! Seen the first time by node %d.", -iter->first, *_memory->getLandmarksIndex().find(iter->first)->second.begin());
+					landmarksDetected.insert(std::make_pair(iter->first, _memory->getLandmarksIndex().find(iter->first)->second));
+				}
+			}
+		}
+	}
 
 	//============================================================
 	// Add virtual links if a path is activated
@@ -3054,7 +3100,7 @@ bool Rtabmap::process(
 				}
 
 				bool hasGlobalLoopClosuresOrLandmarks = false;
-				if(rejectLocalization)
+				if(rejectLocalization && !graph::filterLinks(constraints, Link::kLocalSpaceClosure, true).empty())
 				{
 					// Let's try again without local loop closures
 					localizationLinks = graph::filterLinks(localizationLinks, Link::kLocalSpaceClosure);
@@ -3214,6 +3260,10 @@ bool Rtabmap::process(
 						UDEBUG("from %s", iter->second.transform().prettyPrint().c_str());
 						UDEBUG("  to %s", newT.prettyPrint().c_str());
 						iter->second.setTransform(newT);
+
+						// Update link in the referred signatures
+						if(iter->first > 0)
+							_memory->updateLink(iter->second, false);
 
 						_odomCacheConstraints.insert(std::make_pair(signature->id(), iter->second));
 					}
@@ -3782,6 +3832,13 @@ bool Rtabmap::process(
 	if(!_rawDataKept)
 	{
 		_memory->removeRawData(signature->id(), true, !_neighborLinkRefining && !_proximityBySpace, true);
+	}
+
+	// Localization mode and saving localization data: save odometry covariance in a prior link
+	// so that DBReader can republish the covariance of localization data
+	if(!_memory->isIncremental() && _memory->isLocalizationDataSaved() && !odomCovariance.empty())
+	{
+		_memory->addLink(Link(signature->id(), signature->id(), Link::kPosePrior, odomPose, odomCovariance.inv()));
 	}
 
 	// remove last signature if the memory is not incremental or is a bad signature (if bad signatures are ignored)
