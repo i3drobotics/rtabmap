@@ -1238,7 +1238,10 @@ int main(int argc, char * argv[])
 		}
 		if(!models.empty())
 		{
-			cameraModels.insert(std::make_pair(iter->first, models));
+			if(!node.sensorData().imageCompressed().empty())
+			{
+				cameraModels.insert(std::make_pair(iter->first, models));
+			}
 			if(exportPosesCamera)
 			{
 				if(cameraPoses.empty())
@@ -1767,7 +1770,7 @@ int main(int argc, char * argv[])
 				}
 				else
 				{
-					printf("Texturing %d polygons... robotPoses=%d, cameraDepths=%d\n", (int)mesh->polygons.size(), (int)robotPoses.size(), (int)cameraDepths.size());
+					printf("Texturing %d polygons... robotPoses=%d, cameraModels=%d, cameraDepths=%d\n", (int)mesh->polygons.size(), (int)robotPoses.size(), (int)cameraModels.size(), (int)cameraDepths.size());
 					std::vector<std::map<int, pcl::PointXY> > vertexToPixels;
 					pcl::TextureMeshPtr textureMesh = rtabmap::util3d::createTextureMesh(
 							mesh,
