@@ -673,6 +673,7 @@ PreferencesDialog::PreferencesDialog(QWidget * parent) :
 	connect(_ui->source_checkBox_ignoreGoalDelay, SIGNAL(stateChanged(int)), this, SLOT(makeObsoleteSourcePanel()));
 	connect(_ui->source_checkBox_ignoreGoals, SIGNAL(stateChanged(int)), this, SLOT(makeObsoleteSourcePanel()));
 	connect(_ui->source_checkBox_ignoreLandmarks, SIGNAL(stateChanged(int)), this, SLOT(makeObsoleteSourcePanel()));
+	connect(_ui->source_checkBox_ignoreFeatures, SIGNAL(stateChanged(int)), this, SLOT(makeObsoleteSourcePanel()));
 	connect(_ui->source_spinBox_databaseStartId, SIGNAL(valueChanged(int)), this, SLOT(makeObsoleteSourcePanel()));
 	connect(_ui->source_spinBox_databaseStopId, SIGNAL(valueChanged(int)), this, SLOT(makeObsoleteSourcePanel()));
 	connect(_ui->source_checkBox_useDbStamps, SIGNAL(stateChanged(int)), this, SLOT(makeObsoleteSourcePanel()));
@@ -1460,6 +1461,9 @@ PreferencesDialog::PreferencesDialog(QWidget * parent) :
 	_ui->ArucoVarianceAngular->setObjectName(Parameters::kMarkerVarianceAngular().c_str());
 	_ui->ArucoMarkerRangeMin->setObjectName(Parameters::kMarkerMinRange().c_str());
 	_ui->ArucoMarkerRangeMax->setObjectName(Parameters::kMarkerMaxRange().c_str());
+	_ui->ArucoMarkerPriors->setObjectName(Parameters::kMarkerPriors().c_str());
+	_ui->ArucoPriorsVarianceLinear->setObjectName(Parameters::kMarkerPriorsVarianceLinear().c_str());
+	_ui->ArucoPriorsVarianceAngular->setObjectName(Parameters::kMarkerPriorsVarianceAngular().c_str());
 	_ui->ArucoCornerRefinementMethod->setObjectName(Parameters::kMarkerCornerRefinementMethod().c_str());
 
 	// IMU filter
@@ -1916,6 +1920,7 @@ void PreferencesDialog::resetSettings(QGroupBox * groupBox)
 		_ui->source_checkBox_ignoreGoalDelay->setChecked(true);
 		_ui->source_checkBox_ignoreGoals->setChecked(true);
 		_ui->source_checkBox_ignoreLandmarks->setChecked(false);
+		_ui->source_checkBox_ignoreFeatures->setChecked(false);
 		_ui->source_spinBox_databaseStartId->setValue(0);
 		_ui->source_spinBox_databaseStopId->setValue(0);
 		_ui->source_spinBox_database_cameraIndex->setValue(-1);
@@ -2596,6 +2601,7 @@ void PreferencesDialog::readCameraSettings(const QString & filePath)
 	_ui->source_checkBox_ignoreGoalDelay->setChecked(settings.value("ignoreGoalDelay", _ui->source_checkBox_ignoreGoalDelay->isChecked()).toBool());
 	_ui->source_checkBox_ignoreGoals->setChecked(settings.value("ignoreGoals", _ui->source_checkBox_ignoreGoals->isChecked()).toBool());
 	_ui->source_checkBox_ignoreLandmarks->setChecked(settings.value("ignoreLandmarks", _ui->source_checkBox_ignoreLandmarks->isChecked()).toBool());
+	_ui->source_checkBox_ignoreFeatures->setChecked(settings.value("ignoreFeatures", _ui->source_checkBox_ignoreFeatures->isChecked()).toBool());
 	_ui->source_spinBox_databaseStartId->setValue(settings.value("startId", _ui->source_spinBox_databaseStartId->value()).toInt());
 	_ui->source_spinBox_databaseStopId->setValue(settings.value("stopId", _ui->source_spinBox_databaseStopId->value()).toInt());
 	_ui->source_spinBox_database_cameraIndex->setValue(settings.value("cameraIndex", _ui->source_spinBox_database_cameraIndex->value()).toInt());
@@ -2636,6 +2642,13 @@ bool PreferencesDialog::readCoreSettings(const QString & filePath)
 		std::string value = iter->second;
 		if(iter->first.compare(Parameters::kRtabmapWorkingDirectory()) == 0)
 		{
+			if(value.empty())
+			{
+				UWARN("Reading config: Working directory is empty. Keeping old one (\"%s\").",
+					this->getWorkingDirectory().toStdString().c_str());
+				value = this->getWorkingDirectory().toStdString();
+			}
+
 			// The directory should exist if not the default one
 			if(!QDir(value.c_str()).exists() && value.compare(getDefaultWorkingDirectory().toStdString()) != 0)
 			{
@@ -3108,6 +3121,7 @@ void PreferencesDialog::writeCameraSettings(const QString & filePath) const
 	settings.setValue("ignoreGoalDelay",   _ui->source_checkBox_ignoreGoalDelay->isChecked());
 	settings.setValue("ignoreGoals",       _ui->source_checkBox_ignoreGoals->isChecked());
 	settings.setValue("ignoreLandmarks", _ui->source_checkBox_ignoreLandmarks->isChecked());
+	settings.setValue("ignoreFeatures",  _ui->source_checkBox_ignoreFeatures->isChecked());
 	settings.setValue("startId",          _ui->source_spinBox_databaseStartId->value());
 	settings.setValue("stopId",          _ui->source_spinBox_databaseStopId->value());
 	settings.setValue("cameraIndex",       _ui->source_spinBox_database_cameraIndex->value());
@@ -6323,7 +6337,8 @@ Camera * PreferencesDialog::createCamera(
 				_ui->source_spinBox_database_cameraIndex->value(),
 				_ui->source_spinBox_databaseStopId->value(),
 				!_ui->general_checkBox_createIntermediateNodes->isChecked(),
-				_ui->source_checkBox_ignoreLandmarks->isChecked());
+				_ui->source_checkBox_ignoreLandmarks->isChecked(),
+				_ui->source_checkBox_ignoreFeatures->isChecked());
 	}
 	else
 	{
@@ -6339,7 +6354,7 @@ Camera * PreferencesDialog::createCamera(
 		{
 			calibrationFile.remove("_left.yaml").remove("_right.yaml").remove("_pose.yaml").remove("_rgb.yaml").remove("_depth.yaml");
 		}
-		QString name = QFileInfo(calibrationFile.remove(".yaml")).baseName();
+		QString name = QFileInfo(calibrationFile.remove(".yaml")).fileName();
 		if(!calibrationPath.isEmpty())
 		{
 			QDir d = QFileInfo(calibrationPath).dir();
