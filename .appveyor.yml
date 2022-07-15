@@ -125,7 +125,7 @@ install:
   - cmd: phase.exe /VERYSILENT
   - ECHO "Installed Phase:"
   - ps: "ls \"C:/Program Files/I3DR/Phase\""
-  - set PATH=%PATH%;C:\Program Files\I3DR\bin
+  - set PATH=%PATH%;C:\Program Files\I3DR\Phase\bin
   - set Phase_ROOT_DIR=C:\Program Files\I3DR\Phase
   # Kinect 4 Azure
   - ps: wget 'https://download.microsoft.com/download/3/d/6/3d6d9e99-a251-4cf3-8c6a-8e108e960b4b/Azure%20Kinect%20SDK%201.4.1.exe' -outfile azure.exe
