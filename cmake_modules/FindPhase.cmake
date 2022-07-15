@@ -11,13 +11,13 @@
 
 cmake_minimum_required(VERSION 3.9)
 
+SET(Phase_ROOT_DIR $ENV{Phase_ROOT_DIR})
+
 if (WIN32)
     file (GLOB Phase_LIBRARY_FILES
         "${Phase_ROOT_DIR}/bin/*.dll"
     )
 endif()
-
-message(STATUS "Phase root: ${Phase_ROOT_DIR}")
 
 find_path(Phase_INCLUDE_DIR
     NAMES phase/phaseversion.h
@@ -65,7 +65,6 @@ if (Phase_FOUND)
     )
     set(Phase_INCLUDE_DIRS
         ${Phase_INCLUDE_DIR}
-        ${Phase_INCLUDE_DIR}/opencv4
     )
     set(Phase_DEFINITIONS ${Phase_DEFINITIONS})
 else(Phase_FOUND)
