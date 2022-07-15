@@ -94,6 +94,7 @@ public:
 		kSrcK4W2           = 8,
 		kSrcRealSense2     = 9,
 		kSrcK4A            = 10,
+		kSrcPhase 		   = 11,
 
 		kSrcStereo         = 100,
 		kSrcDC1394         = 100,
@@ -107,6 +108,7 @@ public:
 		kSrcStereoMyntEye  = 108,
 		kSrcStereoZedOC    = 109,
 		kSrcStereoDepthAI  = 110,
+		kSrcStereoDepth	   = 111,
 
 		kSrcRGB            = 200,
 		kSrcUsbDevice      = 200,

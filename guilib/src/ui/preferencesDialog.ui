@@ -3197,6 +3197,11 @@ when using the file type, logs are saved in LogRtabmap.txt (located in the worki
                                </item>
                                <item>
                                 <property name="text">
+                                 <string>Phase</string>
+                                </property>
+                               </item>
+                               <item>
+                                <property name="text">
                                  <string>Kinect for Azure</string>
                                 </property>
                                </item>
@@ -4795,6 +4800,11 @@ when using the file type, logs are saved in LogRtabmap.txt (located in the worki
                                <item>
                                 <property name="text">
                                  <string>RealSense2</string>
+                                </property>
+                               </item>
+                               <item>
+                                <property name="text">
+                                 <string>Phase</string>
                                 </property>
                                </item>
                                <item>

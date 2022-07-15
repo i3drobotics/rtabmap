@@ -137,6 +137,8 @@ AboutDialog::AboutDialog(QWidget * parent) :
 	_ui->label_realsense_license->setEnabled(CameraRealSense::available());
 	_ui->label_realsense2->setText(CameraRealSense2::available() ? "Yes" : "No");
 	_ui->label_realsense2_license->setEnabled(CameraRealSense2::available());
+	_ui->label_phase->setText(CameraPhase::available() ? "Yes" : "No");
+	_ui->label_phase_license->setEnabled(CameraPhase::available());
 	_ui->label_dc1394->setText(CameraStereoDC1394::available()?"Yes":"No");
 	_ui->label_dc1394_license->setEnabled(CameraStereoDC1394::available());
 	_ui->label_flycapture2->setText(CameraStereoFlyCapture2::available()?"Yes":"No");

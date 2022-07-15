@@ -367,6 +367,11 @@ PreferencesDialog::PreferencesDialog(QWidget * parent) :
 		_ui->comboBox_cameraStereo->setItemData(kSrcStereoRealSense2 - kSrcStereo, 0, Qt::UserRole - 1);
 		_ui->comboBox_odom_sensor->setItemData(1, 0, Qt::UserRole - 1);
 	}
+	if (!CameraPhase::available())
+	{
+		_ui->comboBox_cameraRGBD->setItemData(kSrcPhase - kSrcRGBD, 0, Qt::UserRole - 1);
+		_ui->comboBox_cameraStereo->setItemData(kSrcStereoPhase - kSrcStereo, 0, Qt::UserRole - 1);
+	}
 	if(!CameraStereoDC1394::available())
 	{
 		_ui->comboBox_cameraStereo->setItemData(kSrcDC1394 - kSrcStereo, 0, Qt::UserRole - 1);
@@ -2471,6 +2476,20 @@ void PreferencesDialog::readCameraSettings(const QString & filePath)
 	_ui->lineEdit_rs2_jsonFile->setText(settings.value("json_preset", _ui->lineEdit_rs2_jsonFile->text()).toString());
 	settings.endGroup(); // RealSense
 
+	settings.beginGroup("Phase");
+	// _ui->checkbox_rs2_emitter->setChecked(settings.value("emitter", _ui->checkbox_rs2_emitter->isChecked()).toBool());
+	// _ui->checkbox_rs2_irMode->setChecked(settings.value("ir", _ui->checkbox_rs2_irMode->isChecked()).toBool());
+	// _ui->checkbox_rs2_irDepth->setChecked(settings.value("irdepth", _ui->checkbox_rs2_irDepth->isChecked()).toBool());
+	// _ui->spinBox_rs2_width->setValue(settings.value("width", _ui->spinBox_rs2_width->value()).toInt());
+	// _ui->spinBox_rs2_height->setValue(settings.value("height", _ui->spinBox_rs2_height->value()).toInt());
+	// _ui->spinBox_rs2_rate->setValue(settings.value("rate", _ui->spinBox_rs2_rate->value()).toInt());
+	// _ui->spinBox_rs2_width_depth->setValue(settings.value("width_depth", _ui->spinBox_rs2_width_depth->value()).toInt());
+	// _ui->spinBox_rs2_height_depth->setValue(settings.value("height_depth", _ui->spinBox_rs2_height_depth->value()).toInt());
+	// _ui->spinBox_rs2_rate_depth->setValue(settings.value("rate_depth", _ui->spinBox_rs2_rate_depth->value()).toInt());
+	// _ui->checkbox_rs2_globalTimeStync->setChecked(settings.value("global_time_sync", _ui->checkbox_rs2_globalTimeStync->isChecked()).toBool());
+	// _ui->lineEdit_rs2_jsonFile->setText(settings.value("json_preset", _ui->lineEdit_rs2_jsonFile->text()).toString());
+	settings.endGroup(); // Phase
+
 	settings.beginGroup("RGBDImages");
 	_ui->lineEdit_cameraRGBDImages_path_rgb->setText(settings.value("path_rgb", _ui->lineEdit_cameraRGBDImages_path_rgb->text()).toString());
 	_ui->lineEdit_cameraRGBDImages_path_depth->setText(settings.value("path_depth", _ui->lineEdit_cameraRGBDImages_path_depth->text()).toString());
@@ -2992,6 +3011,20 @@ void PreferencesDialog::writeCameraSettings(const QString & filePath) const
 	settings.setValue("global_time_sync",       _ui->checkbox_rs2_globalTimeStync->isChecked());
 	settings.setValue("json_preset",            _ui->lineEdit_rs2_jsonFile->text());
 	settings.endGroup(); // RealSense2
+
+	settings.beginGroup("Phase");
+	// settings.setValue("emitter",                _ui->checkbox_rs2_emitter->isChecked());
+	// settings.setValue("ir",                     _ui->checkbox_rs2_irMode->isChecked());
+	// settings.setValue("irdepth",                _ui->checkbox_rs2_irDepth->isChecked());
+	// settings.setValue("width",                  _ui->spinBox_rs2_width->value());
+	// settings.setValue("height",                 _ui->spinBox_rs2_height->value());
+	// settings.setValue("rate",                   _ui->spinBox_rs2_rate->value());
+	// settings.setValue("width_depth",            _ui->spinBox_rs2_width_depth->value());
+	// settings.setValue("height_depth",           _ui->spinBox_rs2_height_depth->value());
+	// settings.setValue("rate_depth",             _ui->spinBox_rs2_rate_depth->value());
+	// settings.setValue("global_time_sync",       _ui->checkbox_rs2_globalTimeStync->isChecked());
+	// settings.setValue("json_preset",            _ui->lineEdit_rs2_jsonFile->text());
+	settings.endGroup(); // Phase
 
 	settings.beginGroup("RGBDImages");
 	settings.setValue("path_rgb",            _ui->lineEdit_cameraRGBDImages_path_rgb->text());
@@ -4933,7 +4966,8 @@ void PreferencesDialog::updateStereoDisparityVisibility()
               _ui->comboBox_cameraStereo->currentIndex() == kSrcStereoTara - kSrcStereo ||
 			 _ui->comboBox_cameraStereo->currentIndex() == kSrcStereoVideo - kSrcStereo ||
 			 _ui->comboBox_cameraStereo->currentIndex() == kSrcDC1394 - kSrcStereo ||
-			 _ui->comboBox_cameraStereo->currentIndex() == kSrcStereoRealSense2 - kSrcStereo);
+			 _ui->comboBox_cameraStereo->currentIndex() == kSrcStereoRealSense2 - kSrcStereo ||
+			 _ui->comboBox_cameraStereo->currentIndex() == kSrcStereoPhase - kSrcStereo);
 	_ui->checkBox_stereo_rectify->setVisible(_ui->checkBox_stereo_rectify->isEnabled());
 	_ui->label_stereo_rectify->setVisible(_ui->checkBox_stereo_rectify->isEnabled());
 }
@@ -5173,13 +5207,15 @@ void PreferencesDialog::updateSourceGrpVisibility()
 			 _ui->comboBox_cameraRGBD->currentIndex() == kSrcRealSense - kSrcRGBD ||
 			 _ui->comboBox_cameraRGBD->currentIndex() == kSrcRGBDImages-kSrcRGBD ||
 			 _ui->comboBox_cameraRGBD->currentIndex() == kSrcOpenNI_PCL-kSrcRGBD ||
-			 _ui->comboBox_cameraRGBD->currentIndex() == kSrcRealSense2-kSrcRGBD));
+			 _ui->comboBox_cameraRGBD->currentIndex() == kSrcRealSense2-kSrcRGBD ||
+			 _ui->comboBox_cameraRGBD->currentIndex() == kSrcPhase-kSrcRGBD));
 	_ui->groupBox_openni2->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcOpenNI2-kSrcRGBD);
 	_ui->groupBox_freenect2->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcFreenect2-kSrcRGBD);
 	_ui->groupBox_k4w2->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcK4W2 - kSrcRGBD);
 	_ui->groupBox_k4a->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcK4A - kSrcRGBD);
 	_ui->groupBox_realsense->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcRealSense - kSrcRGBD);
 	_ui->groupBox_realsense2->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcRealSense2 - kSrcRGBD);
+	_ui->groupBox_phase->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcPhase - kSrcRGBD);
 	_ui->groupBox_cameraRGBDImages->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcRGBDImages-kSrcRGBD);
 	_ui->groupBox_openni->setVisible(_ui->comboBox_sourceType->currentIndex() == 0 && _ui->comboBox_cameraRGBD->currentIndex() == kSrcOpenNI_PCL - kSrcRGBD);
 
@@ -6062,6 +6098,27 @@ Camera * PreferencesDialog::createCamera(
 				((CameraRealSense2*)camera)->setDualMode(_ui->comboBox_odom_sensor->currentIndex()==1, Transform::fromString(_ui->lineEdit_odom_sensor_extrinsics->text().toStdString()));
 				((CameraRealSense2*)camera)->setJsonConfig(_ui->lineEdit_rs2_jsonFile->text().toStdString());
 			}
+		}
+	}
+	else if (driver == kSrcPhase || driver == kSrcStereoPhase)
+	{
+		camera = new CameraPhase(
+			device.isEmpty()&&driver == kSrcStereoPhase?"T265":device.toStdString(),
+			this->getGeneralInputRate(),
+			this->getSourceLocalTransform());
+		if(driver == kSrcStereoPhase)
+		{
+			// ((CameraPhase*)camera)->setImagesRectified(!useRawImages);
+		}
+		else
+		{
+			// ((CameraPhase*)camera)->setEmitterEnabled(_ui->checkbox_rs2_emitter->isChecked());
+			// ((CameraPhase*)camera)->setIRFormat(_ui->checkbox_rs2_irMode->isChecked(), _ui->checkbox_rs2_irDepth->isChecked());
+			// ((CameraPhase*)camera)->setResolution(_ui->spinBox_rs2_width->value(), _ui->spinBox_rs2_height->value(), _ui->spinBox_rs2_rate->value());
+			// ((CameraPhase*)camera)->setDepthResolution(_ui->spinBox_rs2_width_depth->value(), _ui->spinBox_rs2_height_depth->value(), _ui->spinBox_rs2_rate_depth->value());
+			// ((CameraPhase*)camera)->setGlobalTimeSync(_ui->checkbox_rs2_globalTimeStync->isChecked());
+			// ((CameraPhase*)camera)->setDualMode(_ui->comboBox_odom_sensor->currentIndex()==1, Transform::fromString(_ui->lineEdit_odom_sensor_extrinsics->text().toStdString()));
+			// ((CameraPhase*)camera)->setJsonConfig(_ui->lineEdit_rs2_jsonFile->text().toStdString());
 		}
 	}
 	else if (driver == kSrcStereoMyntEye)

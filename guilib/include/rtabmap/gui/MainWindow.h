@@ -180,6 +180,7 @@ protected Q_SLOTS:
 	void selectRealSense2();
 	void selectRealSense2L515();
 	void selectRealSense2Stereo();
+	void selectPhase();
 	void selectStereoDC1394();
 	void selectStereoFlyCapture2();
 	void selectStereoZed();
