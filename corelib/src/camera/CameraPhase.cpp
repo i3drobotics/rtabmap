@@ -91,7 +91,7 @@ bool CameraPhase::isCalibrated() const
 {
 #ifdef RTABMAP_PHASE
 	//TODO add phase camera calibration check
-	return false
+	return false;
 #else
 	return false;
 #endif

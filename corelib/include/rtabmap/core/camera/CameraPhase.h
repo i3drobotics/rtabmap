@@ -60,16 +60,7 @@ public:
 	virtual std::string getSerial() const;
 
 #ifdef RTABMAP_PHASE
-// private:
-// 	void close();
-// 	void frame_callback(rs2::frame frame);
-// 	void multiple_message_callback(rs2::frame frame);
-// 	void getPoseAndIMU(
-// 			const double & stamp,
-// 			Transform & pose,
-// 			unsigned int & poseConfidence,
-// 			IMU & imu,
-// 			int maxWaitTimeMs = 35);
+//TODO add phase camera members
 #endif
 
 protected:
