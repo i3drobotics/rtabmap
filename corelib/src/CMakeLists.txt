@@ -27,6 +27,7 @@ SET(SRC_FILES
     camera/CameraOpenNICV.cpp
     camera/CameraRealSense.cpp
     camera/CameraRealSense2.cpp
+	camera/CameraPhase.cpp
     camera/CameraRGBDImages.cpp
     camera/CameraStereoDC1394.cpp
     camera/CameraStereoFlyCapture2.cpp
@@ -315,6 +316,17 @@ IF(realsense2_FOUND)
 		)
 	ENDIF()
 ENDIF(realsense2_FOUND)
+
+IF(Phase_FOUND)
+	SET(INCLUDE_DIRS
+		${INCLUDE_DIRS}
+		${Phase_INCLUDE_DIRS}
+	)
+	SET(LIBRARIES
+		${LIBRARIES}
+		${Phase_LIBRARIES}
+	)
+ENDIF(Phase_FOUND)
 
 IF(DC1394_FOUND)
 	SET(INCLUDE_DIRS

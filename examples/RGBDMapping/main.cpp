@@ -50,7 +50,7 @@ void showUsage()
 {
 	printf("\nUsage:\n"
 			"rtabmap-rgbd_mapping driver\n"
-			"  driver       Driver number to use: 0=OpenNI-PCL, 1=OpenNI2, 2=Freenect, 3=OpenNI-CV, 4=OpenNI-CV-ASUS, 5=Freenect2, 6=ZED SDK, 7=RealSense, 8=RealSense2 9=Kinect for Azure SDK 10=MYNT EYE S\n\n");
+			"  driver       Driver number to use: 0=OpenNI-PCL, 1=OpenNI2, 2=Freenect, 3=OpenNI-CV, 4=OpenNI-CV-ASUS, 5=Freenect2, 6=ZED SDK, 7=RealSense, 8=RealSense2 9=Kinect for Azure SDK 10=MYNT EYE S 11=Phase\n\n");
 	exit(1);
 }
 
@@ -174,6 +174,15 @@ int main(int argc, char * argv[])
 			exit(-1);
 		}
 		camera = new rtabmap::CameraMyntEye();
+	}
+	else if (driver == 11)
+	{
+		if (!rtabmap::CameraPhase::available())
+		{
+			UERROR("Not built with Phase support...");
+			exit(-1);
+		}
+		camera = new rtabmap::CameraPhase();
 	}
 	else
 	{

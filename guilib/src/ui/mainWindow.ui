@@ -229,6 +229,16 @@
        </property>
        <addaction name="actionRealSense2_L515"/>
       </widget>
+      <widget class="QMenu" name="menuPhase">
+       <property name="title">
+        <string>Phase</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../GuiLib.qrc">
+         <normaloff>:/images/l515.png</normaloff>:/images/l515.png</iconset>
+       </property>
+       <addaction name="actionPhase"/>
+      </widget>
       <widget class="QMenu" name="menuOrbbec_Astra">
        <property name="title">
         <string>Orbbec Astra</string>
@@ -301,6 +311,16 @@
          <normaloff>:/images/t265.png</normaloff>:/images/t265.png</iconset>
        </property>
        <addaction name="actionRealSense2_T265"/>
+      </widget>
+      <widget class="QMenu" name="menuPhase">
+       <property name="title">
+        <string>Phase</string>
+       </property>
+       <property name="icon">
+        <iconset resource="../GuiLib.qrc">
+         <normaloff>:/images/t265.png</normaloff>:/images/t265.png</iconset>
+       </property>
+       <addaction name="actionPhase"/>
       </widget>
       <widget class="QMenu" name="menuMynt_Eye_S">
        <property name="title">
@@ -1667,6 +1687,14 @@
    </property>
    <property name="text">
     <string>RealSense2</string>
+   </property>
+  </action>
+  <action name="actionPhase">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Phase</string>
    </property>
   </action>
   <action name="actionZed_Open_Capture">

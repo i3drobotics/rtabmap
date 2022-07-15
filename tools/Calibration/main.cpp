@@ -49,6 +49,7 @@ void showUsage()
 			"                                       6=DC1394     (Bumblebee2)\n"
 			"                                       7=FlyCapture2 (Bumblebee2)\n"
 			"                                       11=RealSense2 (T265)\n"
+			"										12=Phase\n"
 			"  --device #     Device id\n"
 			"  --debug        Debug log\n"
 			"  --stereo       Stereo: assuming device provides \n"
@@ -263,6 +264,18 @@ int main(int argc, char * argv[])
 		}
 		camera = new rtabmap::CameraRealSense2();
 		((rtabmap::CameraRealSense2*)camera)->setImagesRectified(false);
+		dialog.setStereoMode(true);
+		dialog.setFisheyeImages(true);
+	}
+	else if(driver == 12)
+	{
+		if(!rtabmap::CameraPhase::available())
+		{
+			UERROR("Not built with Phase support...");
+			exit(-1);
+		}
+		camera = new rtabmap::CameraPhase();
+		((rtabmap::CameraPhase*)camera)->setImagesRectified(false);
 		dialog.setStereoMode(true);
 		dialog.setFisheyeImages(true);
 	}
