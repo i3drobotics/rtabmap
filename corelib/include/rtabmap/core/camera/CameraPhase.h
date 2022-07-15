@@ -36,19 +36,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <pcl/pcl_config.h>
 
 #ifdef RTABMAP_PHASE
-// #include <librealsense2/rs.hpp>
-// #include <librealsense2/hpp/rs_frame.hpp>
+// TODO add phase includes
 #endif
-
-
-// namespace rs2
-// {
-// 	class context;
-// 	class device;
-// 	class syncer;
-// }
-// struct rs2_intrinsics;
-// struct rs2_extrinsics;
 
 namespace rtabmap
 {
@@ -87,48 +76,8 @@ protected:
 	virtual SensorData captureImage(CameraInfo * info = 0);
 
 private:
-#ifdef RTABMAP_REALSENSE2
-	// rs2::context ctx_;
-	// std::vector<rs2::device> dev_;
-	// std::string deviceId_;
-	// rs2::syncer syncer_;
-	// float depth_scale_meters_;
-	// cv::Mat depthBuffer_;
-	// cv::Mat rgbBuffer_;
-	// CameraModel model_;
-	// StereoCameraModel stereoModel_;
-	// Transform imuLocalTransform_;
-	// std::map<double, cv::Vec3f> accBuffer_;
-	// std::map<double, cv::Vec3f> gyroBuffer_;
-	// std::map<double, std::pair<Transform, unsigned int> > poseBuffer_; // <stamp, <Pose, confidence: 1=lost, 2=low, 3=high> >
-	// UMutex poseMutex_;
-	// UMutex imuMutex_;
-	// double lastImuStamp_;
-	// bool clockSyncWarningShown_;
-	// bool imuGlobalSyncWarningShown_;
-
-	// bool emitterEnabled_;
-	// bool ir_;
-	// bool irDepth_;
-	// bool rectifyImages_;
-	// bool odometryProvided_;
-	// bool odometryImagesDisabled_;
-	// bool odometryOnlyLeftStream_;
-	// int cameraWidth_;
-	// int cameraHeight_;
-	// int cameraFps_;
-	// int cameraDepthWidth_;
-	// int cameraDepthHeight_;
-	// int cameraDepthFps_;
-	// bool globalTimeSync_;
-	// bool publishInterIMU_;
-	// bool dualMode_;
-	// Transform dualExtrinsics_;
-	// std::string jsonConfig_;
-	// bool closing_;
-
-	// static Transform realsense2PoseRotation_;
-	// static Transform realsense2PoseRotationInv_;
+#ifdef RTABMAP_PHASE
+	//TODO add phase camera variables
 #endif
 };
 
