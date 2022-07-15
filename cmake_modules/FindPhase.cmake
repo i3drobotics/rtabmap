@@ -17,6 +17,8 @@ if (WIN32)
     )
 endif()
 
+message(STATUS "Phase root: ${Phase_ROOT_DIR}")
+
 find_path(Phase_INCLUDE_DIR
     NAMES phase/phaseversion.h
     HINTS ${Phase_ROOT_DIR}/include
